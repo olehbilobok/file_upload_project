@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>File Upload and Download</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Open+Sans:700,300);
+
+      .frame {
+          position: absolute;
+          top: 40%;
+          left: 50%;
+          width: 400px;
+          height: 400px;
+          margin-top: -200px;
+          margin-left: -200px;
+          border-radius: 2px;
+          box-shadow: 4px 8px 16px 0 rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          background: linear-gradient(to top right, darkmagenta 0%, hotpink 100%);
+          color: #333;
+          font-family: "Open Sans", Helvetica, sans-serif;
+      }
+
+      .center {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 300px;
+          height: 260px;
+          border-radius: 3px;
+          box-shadow: 8px 10px 15px 0 rgba(0, 0, 0, 0.2);
+          background: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: space-evenly;
+          flex-direction: column;
+      }
+
+      .title {
+          width: 100%;
+          height: 50px;
+          border-bottom: 1px solid #999;
+          text-align: center;
+      }
+
+      h1 {
+          font-size: 16px;
+          font-weight: 300;
+          color: #666;
+      }
+
+      .dropzone {
+          width: 100px;
+          height: 80px;
+          border: 1px dashed #999;
+          border-radius: 3px;
+          text-align: center;
+      }
+
+      .upload-icon {
+          margin: 25px 2px 2px 2px;
+      }
+
+      .upload-input {
+          position: relative;
+          top: -62px;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0;
+      }
+
+      .btn {
+          display: block;
+          width: 140px;
+          height: 40px;
+          background: darkmagenta;
+          color: #fff;
+          border-radius: 3px;
+          border: 0;
+          box-shadow: 0 3px 0 0 hotpink;
+          transition: all 0.3s ease-in-out;
+          font-size: 14px;
+      }
+
+      .btn:hover {
+          background: rebeccapurple;
+          box-shadow: 0 3px 0 0 deeppink;
+      }
+      .progress-container {
+          position: absolute;
+          top: 10%;
+          left: 36%;
+      }
+      .table-container {
+          position: absolute;
+          top: 95%;
+          left: 40%;
+          width: 700px;
+          height: 400px;
+          margin-top: -200px;
+          margin-left: -200px;
+
+      }
+
+    </style>
+</head>
+<body>
+	<h1>File Upload and Download</h1>
+
+	<!-- File Upload Form -->
+	<form action="/upload" method="post" id="upload-form" enctype="multipart/form-data">
+       <div class="progress-container">
+            <!-- Upload Progress Bar -->
+            <div class="progress-bar" style="width: 125%; height: 10px; background-color: #ddd">
+                <div id="progress" style="width: 0%; height: 100%; background-color: #4CAF50"></div>
+            </div>
+            <span id="progress-text"></span>
+            <span id="remaining"></span>
+        </div>
+        <div class="frame">
+            <div class="center">
+                <div class="title">
+                    <h1>Drop file to upload</h1>
+                </div>
+
+                <div class="dropzone">
+                    <img src="http://100dayscss.com/codepen/upload.svg" class="upload-icon" />
+                    <input type="file" class="upload-input" id="file-input" />
+                </div>
+
+                <button type="submit" class="btn" name="uploadbutton">Upload file</button>
+
+            </div>
+
+        </div>
+	</form>
+
+	<hr>
+	<!-- File Download List -->
+    <div class="table-container" id="table-container">
+        <table class="table fixed">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">File Name</th>
+                  <th scope="col">Download</th>
+                </tr>
+              </thead>
+
+
+              <tbody id="filenames">
+                {% for filename in filenames %}
+                <tr class="filename">
+                  <td>{{ filename }}</td>
+                  <td>
+                  <button type="submit"
+                    class="btn btn-success btn-lg gradient-custom-4 text-body"><a href="{{ url_for('download_file', filename=filename) }}">Download</a>
+                  </button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+
+
+        </table>
+    </div>
+
+
+    <!-- JavaScript  -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <script>
+		// Get the file upload form and progress bar elements
+		var form = document.getElementById('upload-form');
+		var fileInput = document.getElementById('file-input')
+		var progressBar = document.getElementById('progress-bar');
+		var progress = document.getElementById('progress');
+		var progressText = document.getElementById('progress-text');
+		var remaining = document.getElementById('remaining');
+
+		var start = new Date().getTime()
+
+		form.addEventListener('submit', e => {
+            e.preventDefault();
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+            xhr.upload.onprogress = e => {
+				if (e.lengthComputable) {
+					  percentComplete = (e.loaded / e.total) * 100;
+					  console.log(percentComplete)
+					  progress.style.width = `${percentComplete}%`;
+					  progressText.innerHTML = Math.floor(percentComplete) + "%";
+					  var end = new Date().getTime()
+					  var duration = (end - start) / 1000;
+					  var bps = e.loaded / duration;
+					  var kbps = bps / 1024;
+					  var time = (e.total - e.loaded) / bps;
+					  var seconds = time % 60;
+					  var minutes = time / 60;
+					  seconds = Math.floor(seconds)
+					  minutes = Math.floor(minutes)
+					  remaining.innerHTML = Math.floor(kbps) + " KB/s " + minutes + " minutes " + seconds + " seconds remaining ";
+
+                      if (percentComplete == 100) {
+                        $.ajax({
+                          type: 'GET',
+                          url: '/',
+                          success: function(response) {
+
+                            var filenames = response.filenames
+
+                            $('#filenames').empty();
+                            for (var i = 0; i < filenames.length; i++) {
+                                var filename = filenames[i];
+                                var download_url = '{{ url_for("download_file", filename="") }}' + filename;
+
+                                $('#filenames').append(
+                                '<tr class="filename">' +
+                                    '<td>' + filename + '</td>' +
+                                    '<td>' +
+                                        '<button type="submit" class="btn btn-success btn-lg gradient-custom-4 text-body">' +
+                                            '<a href="' + download_url + '">Download</a>' +
+                                        '</button>' +
+                                    '</td>' +
+                                '</tr>'
+                                    );
+                            }
+
+
+                             },
+                          error: function(response) {
+                            alert('error')
+                        },
+                        });
+                        }
+              }
+            };
+            xhr.send(formData);
+
+          });
+
+	</script>
+</body>
+</html>
