@@ -35,4 +35,8 @@ def download_file(filename):
 
 
 if __name__ == '__main__':
+
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+
     app.run(port=8000, debug=True)
